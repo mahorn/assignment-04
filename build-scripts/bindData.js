@@ -1,3 +1,4 @@
+// require modules
 const fs = require('fs'),
       csvParse = require('csv-parse'),
       chalk = require('chalk'),
