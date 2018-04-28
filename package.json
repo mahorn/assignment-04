@@ -1,0 +1,17 @@
+{
+  "name": "assignment-04",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node build-scripts/processData.js && live-server"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "chalk": "^2.4.0",
+    "csv-parse": "^2.2.0",
+    "csv2geojson": "^5.0.2",
+    "mapshaper": "^0.4.66"
+  }
+}
