@@ -13,12 +13,35 @@
       margin: 0;
       padding: 0;
     }
-
     #map {
       position: absolute;
       width: 100%;
       top: 0;
       bottom: 0;
+    }
+    #ui {
+      position: absolute;
+      z-index: 1000; /* place above map*/
+      bottom: 18px;
+      right: 18px;
+      padding: 6px 12px;
+      background: rgba(256,256,256,.9);
+    }
+    #ui ul {
+      list-style-type: none;
+      padding: 0;
+    }
+    #ui li {
+      margin-bottom: 6px;
+    }
+    #ui a {
+      text-decoration: none;
+    }
+    #ui a:hover {
+      font-weight: bold;
+    }
+    .highlight {
+      font-weight: bold;
     }
   </style>
 </head>
@@ -26,14 +49,19 @@
 <body>
 
   <div id="map"></div>
+  <div id="ui">
+    <h3>Austin City Districts</h3>
+    <h4>(number of traffic signals)</h4>
+    <ul id ="legend-list"></ul>
+  </div>
 
   <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
   <script src="https://unpkg.com/leaflet@1.3.1/dist/leaflet.js"></script>
 
   <script>
     var options = {
-      center: [30.30927, -97.74211],
-      zoom: 10
+        center: [30.30927, -97.74211],
+        zoom: 10
     }
 
     var map = L.map('map', options);
@@ -54,10 +82,26 @@
                var districts = districtsData[0];
                    colors = colorsData[0];
                    signals = signalsData[0];
+
+                // select empty legend list
+                // store a reference to the html list
+
+              var legendList = $('#legend-list');
+
+              // loop through the districs features and create a new list item
+              // for each feature in the legend
+              // fot each feature, append a new list item <li>, giving each a 
+              // common class attribute class="legend-item" and a unique 
+              // attribute using the itirating number that refers to each polygon d= "distric-" + i + '"
+              // we will place the text for each within <a> tags and style them with the Vivid color scheme
+                for(var i = 1; i <= districts.features.length; i++) {
+                  legendList.append('<li class="legend-item" id="district-' + i + '"><a style="color:' + colors.Vivid['10'][i -1] + '" href="#">District ' + i + ' (<span></span>)</a></li>');
+                }
                   
-                
+                // create a layerGroup with the geojson fata
                  var districtsLayerGroup = L.geoJSON(districts, {
                    style: function (feature) {
+                     // style with the colors object, each polygon a unique color
                      return {
                        color: colors.Vivid['10'][feature.properties.council_di],
                        fillOpacity: .6
@@ -66,7 +110,7 @@
                  }).addTo(map);
                   L.geoJSON(colors).addTo(map);
                   L.geoJSON(signals).addTo(map);
-             console.log(colors);
+            //  console.log(colors);
 
      });
 
