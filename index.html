@@ -37,25 +37,39 @@
     }
 
     var map = L.map('map', options);
-
+    
+    // add leaflet tile layer 
     L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/rastertiles/voyager_nolabels/{z}/{x}/{y}.png', {
       maxZoom: 18,
       attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>, &copy;<a href="https://carto.com/attribution">CARTO</a>'
     }).addTo(map);
-
+    
+    // load data with JQuary's method .when()
     $.when(
       $.getJSON('data/districts-counts.json'),
       $.getJSON('data/vividcolors.json'),
       $.getJSON('data/austin-traffic-signals.json')
     ).done(function (districts, colors, signals) {
 
-      var districts = districtsData[0],
-          colors = colorsData[0],
-          signals = signalsData[0];
+               var districtsData = districts[0];
+                   colorsData = colors[0];
+                   signalsData = signals[0];
+                  
+                
+                 var districtsLayerGroup = L.geoJSON(districts, {
+                   style: function (feature) {
+                     return {
+                       color: colors.Vivid[10][feature.properties.council_di],
+                       fillOpacity: .6
+                       }
+                    }
+                 }).addTo(map);
+                  L.geoJSON(colors).addTo(map);
+                  L.geoJSON(signals).addTo(map);
+             console.log(colors);
 
-          console.log(districts);
+     });
 
-    });
   </script>
 </body>
 
