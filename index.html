@@ -49,17 +49,17 @@
       $.getJSON('data/districts-counts.json'),
       $.getJSON('data/vividcolors.json'),
       $.getJSON('data/austin-traffic-signals.json')
-    ).done(function (districts, colors, signals) {
+    ).done(function (districtsData, colorsData, signalsData) {
 
-               var districtsData = districts[0];
-                   colorsData = colors[0];
-                   signalsData = signals[0];
+               var districts = districtsData[0];
+                   colors = colorsData[0];
+                   signals = signalsData[0];
                   
                 
                  var districtsLayerGroup = L.geoJSON(districts, {
                    style: function (feature) {
                      return {
-                       color: colors.Vivid[10][feature.properties.council_di],
+                       color: colors.Vivid['10'][feature.properties.council_di],
                        fillOpacity: .6
                        }
                     }
