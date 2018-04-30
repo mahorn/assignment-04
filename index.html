@@ -102,11 +102,11 @@
                  var districtsLayerGroup = L.geoJSON(districts, {
                    style: function (feature) {
 
-                    var props = colors.Vivid['10'][feature.properties.council_di];
+                    // var props = colors.Vivid['10'][feature.properties.council_di];
                      // style with the colors object, each polygon a unique color
                      return {
-                       color: props,
-                      //  color: colors.Vivid['10'][feature.properties.council_di],
+                      //  color: props,
+                       color: colors.Vivid['10'][feature.properties.council_di - 1],
                        fillOpacity: .6
                        }
 
@@ -123,20 +123,47 @@
                       layer.on('mouseover', function () {
                         //provide visual affordance
                         this.setStyle({
-                          fillOpacity: .8
+                          fillOpacity: .9
                         });
 
                         // select the corresponding list item and add the highlight class to make bold
                         $('#district-' + feature.properties.council_di).addClass('highlight');
                       })
 
-                      layer.on('mouseout', function () {
-                          this.setStyle();
-                          fillOpacity: .5
-                      });
-                       $('#district-' + feature.properties.council_di).addClass('');
+                      // layer.on('mouseout', function () {
+                      //     this.setStyle();
+                      //     fillOpacity: .5
+                      // });
+                      //  $('#district-' + feature.properties.council_di).addClass('');
                     }
                  }).addTo(map);
+
+                 // select all the list items and on mouseover
+                 $('.legend-item').on('mouseover', function() {
+                   // extract the specific number from the specific item being moused over
+                   var num = this.id.replace('district-', '');
+                   // send this number as an argument to the highlightDistrict function
+                   highlightDistrict(num);
+                 });
+
+                function highlightDistrict(districtNum) {
+                  //loop through the disctricts polygons
+                  districtsLayerGroup.eachLayer(function(layer) {
+                    // if the district id matches the one we are mousing over
+                    if(layer.feature.properties.council_di === districtNum) {
+                      // change the layer style
+                      layer.setStyle({
+                        fillOpacity: .9
+                      }).bringToFront();
+                    } else {
+                      //return to original 
+                      layer.setStyle({
+                        fillOpacity: .3
+                      });
+                    }
+                  });
+                }
+
                   L.geoJSON(colors).addTo(map);
                   L.geoJSON(signals).addTo(map);
             //  console.log(colors);
