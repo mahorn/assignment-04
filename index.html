@@ -45,6 +45,7 @@
     .highlight {
       font-weight: bold;
     }
+    
   </style>
 </head>
 
@@ -102,7 +103,9 @@
                 for(var i = 1; i <= districts.features.length; i++) {
                   legendList.append('<li class="legend-item" id="district-' + i + '"><a style="color:' + colors.Vivid['10'][i -1] + '" href="#">District ' + i + ' (<span></span>)</a></li>');
                 }
-              
+
+             
+
               // create new markerClusterGroup
               var markers = L.markerClusterGroup();
               // loop through all our signals features
@@ -123,7 +126,7 @@
                  var districtsLayerGroup = L.geoJSON(districts, {
                    style: function (feature) {
 
-                    // var props = colors.Vivid['10'][feature.properties.council_di];
+                    //  var props = colors.Vivid['10'][feature.properties.council_di - 1];
                      // style with the colors object, each polygon a unique color
                      return {
                       //  color: props,
@@ -146,15 +149,19 @@
                         });
 
                         // select the corresponding list item and add the highlight class to make bold
-                        $('#district-' + feature.properties.council_di).addClass('highlight');
+                         $('#district-' + feature.properties.council_di).addClass('highlight');
                       })
 
-                      // layer.on('mouseout', function () {
-                      //     this.setStyle();
-                      //     fillOpacity: .5
-                      // });
-                      //  $('#district-' + feature.properties.council_di).addClass('');
-                    }
+                        layer.on('mouseout', function () {
+                            this.setStyle({
+                             color: colors.Vivid['10'][feature.properties.council_di - 1],
+                             fillOpacity: .6
+                            });
+                           
+                        })
+
+                          $('#district-' + feature.properties.council_di);
+                     }
                  }).addTo(map);
 
                  // select all the list items and on mouseover
