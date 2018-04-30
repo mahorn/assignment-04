@@ -90,22 +90,51 @@
 
               // loop through the districs features and create a new list item
               // for each feature in the legend
-              // fot each feature, append a new list item <li>, giving each a 
+              // for each feature, append a new list item <li>, giving each a 
               // common class attribute class="legend-item" and a unique 
               // attribute using the itirating number that refers to each polygon d= "distric-" + i + '"
               // we will place the text for each within <a> tags and style them with the Vivid color scheme
                 for(var i = 1; i <= districts.features.length; i++) {
                   legendList.append('<li class="legend-item" id="district-' + i + '"><a style="color:' + colors.Vivid['10'][i -1] + '" href="#">District ' + i + ' (<span></span>)</a></li>');
                 }
-                  
-                // create a layerGroup with the geojson fata
+                 
+                // create a layerGroup with the geojson data
                  var districtsLayerGroup = L.geoJSON(districts, {
                    style: function (feature) {
+
+                    var props = colors.Vivid['10'][feature.properties.council_di];
                      // style with the colors object, each polygon a unique color
                      return {
-                       color: colors.Vivid['10'][feature.properties.council_di],
+                       color: props,
+                      //  color: colors.Vivid['10'][feature.properties.council_di],
                        fillOpacity: .6
                        }
+
+                       
+                    },
+                    
+                    // add an onEachFeature 
+                    onEachFeature(feature, layer) {
+                      // select each legend list item span and append the total count of signals
+                      // select each <span> tag within our legend to update the total number of counts for each feature
+                        $('#district-' + feature.properties.council_di + ' span').append(feature.properties.count); 
+                      
+                      // when mousing over a polygon layer
+                      layer.on('mouseover', function () {
+                        //provide visual affordance
+                        this.setStyle({
+                          fillOpacity: .8
+                        });
+
+                        // select the corresponding list item and add the highlight class to make bold
+                        $('#district-' + feature.properties.council_di).addClass('highlight');
+                      })
+
+                      layer.on('mouseout', function () {
+                          this.setStyle();
+                          fillOpacity: .5
+                      });
+                       $('#district-' + feature.properties.council_di).addClass('');
                     }
                  }).addTo(map);
                   L.geoJSON(colors).addTo(map);
