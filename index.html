@@ -104,8 +104,6 @@
                   legendList.append('<li class="legend-item" id="district-' + i + '"><a style="color:' + colors.Vivid['10'][i -1] + '" href="#">District ' + i + ' (<span></span>)</a></li>');
                 }
 
-             
-
               // create new markerClusterGroup
               var markers = L.markerClusterGroup();
               // loop through all our signals features
@@ -139,17 +137,23 @@
                     onEachFeature(feature, layer) {
                       // select each legend list item span and append the total count of signals
                       // select each <span> tag within our legend to update the total number of counts for each feature
-                        $('#district-' + feature.properties.council_di + ' span').append(feature.properties.count); 
+                       $('#district-' + feature.properties.council_di + ' span').append(feature.properties.count); 
                       
                       // when mousing over a polygon layer
                       layer.on('mouseover', function () {
                         //provide visual affordance
+                        //  map.setView(e.latlng, 12);
                         this.setStyle({
                           fillOpacity: .9
                         });
+                       map.on('click', function(e) {
+                          map.setView(e.latlng, 11);
+                          });
+
 
                         // select the corresponding list item and add the highlight class to make bold
-                         $('#district-' + feature.properties.council_di).addClass('highlight');
+                        
+                          $('#district-' + feature.properties.council_di).addClass('highlight');
                       })
 
                         layer.on('mouseout', function () {
@@ -160,24 +164,38 @@
                            
                         })
 
-                          $('#district-' + feature.properties.council_di);
+                           $('#district-' + feature.properties.council_di);
                      }
+
+
                  }).addTo(map);
 
+                
                  // select all the list items and on mouseover
-                 $('.legend-item').on('mouseover', function() {
+                  $('.legend-item').on('mouseover', function(e) {
+                   
                    // extract the specific number from the specific item being moused over
                    var num = this.id.replace('district-', '');
+                   
+
                    // send this number as an argument to the highlightDistrict function
                    highlightDistrict(num);
+
+                
+                  
+
                  });
+                 
 
                 function highlightDistrict(districtNum) {
                   //loop through the disctricts polygons
                   districtsLayerGroup.eachLayer(function(layer) {
                     // if the district id matches the one we are mousing over
                     if(layer.feature.properties.council_di === districtNum) {
+
+                    
                       // change the layer style
+                     
                       layer.setStyle({
                         fillOpacity: .9
                       }).bringToFront();
@@ -193,10 +211,6 @@
                         fillOpacity: .3
                       });
                     }
-                     
-
-
-
 
                   });
                 }
