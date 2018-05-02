@@ -15,37 +15,43 @@
       margin: 0;
       padding: 0;
     }
+
     #map {
       position: absolute;
       width: 100%;
       top: 0;
       bottom: 0;
     }
+
     #ui {
       position: absolute;
       z-index: 1000; /* place above map*/
       bottom: 18px;
       right: 18px;
       padding: 6px 12px;
-      background: rgba(256,256,256,.9);
+      background: rgba(256, 256, 256, .9);
     }
+
     #ui ul {
       list-style-type: none;
       padding: 0;
     }
+
     #ui li {
       margin-bottom: 6px;
     }
+
     #ui a {
       text-decoration: none;
     }
+
     #ui a:hover {
       font-weight: bold;
     }
+
     .highlight {
       font-weight: bold;
     }
-    
   </style>
 </head>
 
@@ -55,7 +61,7 @@
   <div id="ui">
     <h3>Austin City Districts</h3>
     <h4>(number of traffic signals)</h4>
-    <ul id ="legend-list"></ul>
+    <ul id="legend-list"></ul>
   </div>
 
   <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
@@ -64,18 +70,18 @@
 
   <script>
     var options = {
-        center: [30.30927, -97.74211],
-        zoom: 10
+      center: [30.30927, -97.74211],
+      zoom: 11
     }
 
     var map = L.map('map', options);
-    
+
     // add leaflet tile layer 
     L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/rastertiles/voyager_nolabels/{z}/{x}/{y}.png', {
       maxZoom: 18,
       attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>, &copy;<a href="https://carto.com/attribution">CARTO</a>'
     }).addTo(map);
-    
+
     // load data with JQuary's method .when()
     $.when(
       $.getJSON('data/districts-counts.json'),
@@ -83,143 +89,125 @@
       $.getJSON('data/austin-traffic-signals.json')
     ).done(function (districtsData, colorsData, signalsData) {
 
-               var districts = districtsData[0];
-                   colors = colorsData[0];
-                   signals = signalsData[0];
+      var districts = districtsData[0];
+      colors = colorsData[0];
+      signals = signalsData[0];
 
-                  //  console.log(districtsData);
+      // select empty legend list
+      // store a reference to the html list
+      var legendList = $('#legend-list');
 
-                // select empty legend list
-                // store a reference to the html list
+      // loop through the districs features and create a new list item
+      // for each feature in the legend
+      // for each feature, append a new list item <li>, giving each a 
+      // common class attribute class="legend-item" and a unique 
+      // attribute using the itirating number that refers to each polygon d= "distric-" + i + '"
+      // we will place the text for each within <a> tags and style them with the Vivid color scheme
+      for (var i = 1; i <= districts.features.length; i++) {
+        legendList.append('<li class="legend-item" id="district-' + i + '"><a style="color:' + colors.Vivid['10'][i - 1] + '" href="#">District ' + i + ' (<span></span>)</a></li>');
+      }
+      // create new markerClusterGroup
+      var markers = L.markerClusterGroup();
+      // loop through all our signals features
+      signals.features.forEach(function (feature) {
+        // create a new Leaflet marker for each
+        var coords = feature.geometry.coordinates,
+          marker = L.marker([coords[1], coords[0]]);
+        // bind a tooltip to the marker
+        marker.bindTooltip("Signal ID: " + feature.properties.SIGNAL_ID);
+        // add the marker to the markerClusterGroup
+        markers.addLayer(marker);
+      });
+      // add the marker to markerClusterGroup to the map
+      map.addLayer(markers);
 
-              var legendList = $('#legend-list');
+      // create a layerGroup with the geojson data
+      var districtsLayerGroup = L.geoJSON(districts, {
+        style: function (feature) {
+          //  var props = colors.Vivid['10'][feature.properties.council_di - 1];
+          // style with the colors object, each polygon a unique color
+          return {
+            // color: props,
+            color: colors.Vivid['10'][feature.properties.council_di - 1],
+            fillOpacity: .6
+          }
+        },
+        // add an onEachFeature 
+        onEachFeature(feature, layer) {
+          // select each legend list item span and append the total count of signals
+          // select each <span> tag within our legend to update the total number of counts for each feature
+          $('#district-' + feature.properties.council_di + ' span').append(feature.properties.count);
+          // when mousing over a polygon layer
+          layer.on('mouseover', function () {
+            //provide visual affordance
+            //  map.setView(e.latlng, 12);
+            this.setStyle({
+              fillOpacity: .9
+            });
+            map.on('click', function (e) {
+              map.setView(e.latlng, 12);
+            });
+            // select the corresponding list item and add the highlight class to make bold
+            $('#district-' + feature.properties.council_di).addClass('highlight');
+          })
+          layer.on('mouseout', function () {
+            this.setStyle({
+              color: colors.Vivid['10'][feature.properties.council_di - 1],
+              fillOpacity: .6
+            });
+            $('#district-' + feature.properties.council_di).removeClass('highlight');
+          })
+        }
+      }).addTo(map);
 
-              // loop through the districs features and create a new list item
-              // for each feature in the legend
-              // for each feature, append a new list item <li>, giving each a 
-              // common class attribute class="legend-item" and a unique 
-              // attribute using the itirating number that refers to each polygon d= "distric-" + i + '"
-              // we will place the text for each within <a> tags and style them with the Vivid color scheme
-                for(var i = 1; i <= districts.features.length; i++) {
-                  legendList.append('<li class="legend-item" id="district-' + i + '"><a style="color:' + colors.Vivid['10'][i -1] + '" href="#">District ' + i + ' (<span></span>)</a></li>');
-                }
+      // select all the list items and on mouseover
+      $('.legend-item').on('mouseover', function () {
+        // extract the specific number from the specific item being moused over
+        var num = this.id.replace('district-', '');
+        // send this number as an argument to the highlightDistrict function
+        highlightDistrict(num);
+      });
 
-              // create new markerClusterGroup
-              var markers = L.markerClusterGroup();
-              // loop through all our signals features
-              signals.features.forEach(function(feature){
-                // create a new Leaflet marker for each
-                var coords = feature.geometry.coordinates,
-                    marker = L.marker([coords[1], coords[0]]);
-                    // bind a tooltip to the marker
-                    marker.bindTooltip("Signal ID: " + feature.properties.SIGNAL_ID);
-                    // add the marker to the markerClusterGroup
-                    markers.addLayer(marker);
-              });
-              // add the marker to markerClusterGroup to the map
-              map.addLayer(markers);
-            
-                 
-                // create a layerGroup with the geojson data
-                 var districtsLayerGroup = L.geoJSON(districts, {
-                   style: function (feature) {
+      // select all the list items and on mouseover
+      $('.legend-item').on('click', function () {
+        // extract the specific number from the specific item being moused over
+        var zoom = this.id.replace('district-', '');
+        // send this number as an argument to the zoomDistrict function
+        zoomDistrict(zoom);
+      });
 
-                    //  var props = colors.Vivid['10'][feature.properties.council_di - 1];
-                     // style with the colors object, each polygon a unique color
-                     return {
-                      //  color: props,
-                       color: colors.Vivid['10'][feature.properties.council_di - 1],
-                       fillOpacity: .6
-                       } 
-                    },
-                    
-                    // add an onEachFeature 
-                    onEachFeature(feature, layer) {
-                      // select each legend list item span and append the total count of signals
-                      // select each <span> tag within our legend to update the total number of counts for each feature
-                       $('#district-' + feature.properties.council_di + ' span').append(feature.properties.count); 
-                      
-                      // when mousing over a polygon layer
-                      layer.on('mouseover', function () {
-                        //provide visual affordance
-                        //  map.setView(e.latlng, 12);
-                        this.setStyle({
-                          fillOpacity: .9
-                        });
-                       map.on('click', function(e) {
-                          map.setView(e.latlng, 11);
-                          });
+      function highlightDistrict(districtNum) {
+        //loop through the disctricts polygons
+        districtsLayerGroup.eachLayer(function (layer) {
+          // if the district id matches the one we are mousing over
+          if (layer.feature.properties.council_di === districtNum) {
+            // change the layer style
+            layer.setStyle({
+              fillOpacity: .9
+            }).bringToFront();
+          } else {
+            //return to original 
+            layer.setStyle({
+              fillOpacity: .3
+            });
+          }
+        });
+      }
 
-
-                        // select the corresponding list item and add the highlight class to make bold
-                        
-                          $('#district-' + feature.properties.council_di).addClass('highlight');
-                      })
-
-                        layer.on('mouseout', function () {
-                            this.setStyle({
-                             color: colors.Vivid['10'][feature.properties.council_di - 1],
-                             fillOpacity: .6
-                            });
-                           
-                        })
-
-                           $('#district-' + feature.properties.council_di);
-                     }
-
-
-                 }).addTo(map);
-
-                
-                 // select all the list items and on mouseover
-                  $('.legend-item').on('mouseover', function(e) {
-                   
-                   // extract the specific number from the specific item being moused over
-                   var num = this.id.replace('district-', '');
-                   
-
-                   // send this number as an argument to the highlightDistrict function
-                   highlightDistrict(num);
-
-                
-                  
-
-                 });
-                 
-
-                function highlightDistrict(districtNum) {
-                  //loop through the disctricts polygons
-                  districtsLayerGroup.eachLayer(function(layer) {
-                    // if the district id matches the one we are mousing over
-                    if(layer.feature.properties.council_di === districtNum) {
-
-                    
-                      // change the layer style
-                     
-                      layer.setStyle({
-                        fillOpacity: .9
-                      }).bringToFront();
-                      
-                     
-                     
-                     
-                      
-
-                    } else {
-                      //return to original 
-                      layer.setStyle({
-                        fillOpacity: .3
-                      });
-                    }
-
-                  });
-                }
-
-                   L.geoJSON(colors).addTo(map);
-                   L.geoJSON(signals).addTo(map);
-            //  console.log(colors);
-
-     });
+      function zoomDistrict(districtNum) {
+        //loop through the disctricts polygons
+        districtsLayerGroup.eachLayer(function (layer) {
+          // if the district id matches the one we are clicking
+          if (layer.feature.properties.council_di === districtNum) {
+            // zoom in
+          map.zoomIn(8);
+          } else {
+           // zoom out
+          map.zoomOut(1);     
+          }
+        });
+      }
+    });
 
   </script>
 </body>
